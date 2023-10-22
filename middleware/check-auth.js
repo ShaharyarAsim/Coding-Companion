@@ -14,9 +14,7 @@ module.exports = async (req, res, next) => {
     if (token_original !== token) {
       throw "LoginSessionExpired:TRUE";
     }
-    //req.userData = { email: decodedToken.email, userID: decodedToken.userId };
-
-    console.log("Authenticated!");
+    //console.log("Authenticated!");
     next();
   } catch (err) {
     if (req.body.email) {

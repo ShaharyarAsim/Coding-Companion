@@ -42,8 +42,8 @@ app.use(function (req, res, next) {
 const customCodeAPILimiter = rateLimiter.customRateLimiter(0.5, 1);
 
 //Routing and middleware
-app.use("/api/code", codeCompilerRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/code", rateLimiter.codeAPIRateLimiter, codeCompilerRoutes);
+app.use("/api/user", rateLimiter.userAPIRateLimiter, userRoutes);
 app.use((req, res, next) => {
   res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
