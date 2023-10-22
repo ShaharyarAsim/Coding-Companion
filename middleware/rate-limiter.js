@@ -13,8 +13,8 @@ const userAPIRateLimiter = rateLimit({
 });
 
 const codeAPIRateLimiter = rateLimit({
-  windowMs: 5 * 1000, // Time in ms
-  max: 2, // Max requests allowed per time limit
+  windowMs: 3 * 1000, // Time in ms
+  max: 3, // Max requests allowed per time limit
   statusCode: 200,
   keyGenerator: (req, res) => {
     return req.clientIp; // IP address from requestIp.mw()
