@@ -97,7 +97,7 @@ router.post("/compile/:id", checkAuth, async (req, res) => {
       ); // The final check for correct code. At this point, the AI should recognise whether or not the code can compile, leaving the question as to whether or not it follows the established question
       prompt = prompt.concat(
         " ",
-        "If my code compiles AND complies with the question, congratulate me!"
+        'If my code compiles AND complies with the question, congratulate me! A simple "Congratulations" will do!'
       ); // The congratulations provided by the AI allow us to determine whether a user's answer is correct
 
       // OpenAI logic -- ChatGPT is provided with the prompt and calculates a response
