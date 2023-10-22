@@ -1,10 +1,15 @@
 const multer = require("multer");
 
+//MIME Types to check file extension
 const MIME_TYPE_MAP = {
   "image/png": "png",
   "image/jpg": "jpg",
   "image/jpeg": "jpg",
 };
+
+//Setting up multer temporary disk storage to facilitate image upload
+
+//Use for cloud image hosting
 
 const storage = multer.diskStorage({
   filename: (req, file, callback) => {
@@ -22,6 +27,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 module.exports = upload;
+
+//Use below config for local disk storage
 
 // const MIME_TYPE_MAP = {
 //   "image/png": "png",

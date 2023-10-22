@@ -60,4 +60,11 @@ router.get(
   userControllers.getRecentActivities
 );
 
+// User History
+router.get(
+  "/user-history/:id",
+  bodyParser.json(),
+  userControllers.fetchHistory
+);
+
 module.exports = router;

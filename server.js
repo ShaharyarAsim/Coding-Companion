@@ -42,6 +42,11 @@ const onListening = () => {
 
 const port = normalizePort(process.env.PORT || "3000");
 
+process.on("SIGINT", function () {
+  console.log("\nShutting down from SIGINT (Ctrl-C/command-C)");
+  process.exit(0);
+});
+
 app.set("port", port);
 const server = http.createServer(app);
 server.on("error", onError);

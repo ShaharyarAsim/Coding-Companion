@@ -42,6 +42,11 @@ const userAnsSchema = mongoose.Schema({
     required: false,
     default: 0,
   },
+  completedOn: {
+    type: Date,
+    immutable: true,
+    default: () => Date.now(),
+  },
 });
 
 const userSchema = mongoose.Schema({

@@ -31,20 +31,23 @@ const loginUser = async (req, res, next) => {
 
     // Update user login streak
 
-    if (
-      fetchedUser.loginStreak.streakCount === 0 ||
-      fetchedUser.loginStreak.nextDate < Date.now()
-    ) {
-      fetchedUser.loginStreak.streakCount = 0;
-      fetchedUser.loginStreak.onDate = Date.now();
-      fetchedUser.loginStreak.nextDate = Date.now() + 24 * 60 * 60 * 1000;
-      fetchedUser.loginStreak.streakCount =
-        fetchedUser.loginStreak.streakCount + 1;
-    } else {
-      fetchedUser.loginStreak.onDate = Date.now();
-      fetchedUser.loginStreak.nextDate = Date.now() + 24 * 60 * 60 * 1000;
-      fetchedUser.loginStreak.streakCount =
-        fetchedUser.loginStreak.streakCount + 1;
+    const now = Date.now();
+    if (fetchedUser.loginStreak.nextDate <= now) {
+      // If the next login date has already passed or it's the first login, check if it's a new day.
+      const lastLoginDate = new Date(fetchedUser.loginStreak.onDate);
+      const currentLoginDate = new Date(now);
+
+      if (
+        lastLoginDate.getFullYear() === currentLoginDate.getFullYear() &&
+        lastLoginDate.getMonth() === currentLoginDate.getMonth() &&
+        lastLoginDate.getDate() === currentLoginDate.getDate()
+      ) {
+        // It's the same day, so do not reset the streak.
+        fetchedUser.loginStreak.streakCount++;
+      } else {
+        // It's a new day, so reset the streak.
+        fetchedUser.loginStreak.streakCount = 1;
+      }
     }
 
     //Saving user to database
@@ -89,26 +92,28 @@ const loginUser = async (req, res, next) => {
 //User registration controller
 const registerUser = async (req, res, next) => {
   try {
+    //Validating user input
     const { error, value } = await Validators.registrationSchema.validateAsync(
       req.body
     );
 
+    //Looking for pre-existing email in the db
     let user = await User.findOne({ email: req.body.email });
     if (user) {
       throw "Email already in use. Please try another one.";
     }
+
+    //Looking for pre-existing username in the db
     user = await User.findOne({ username: req.body.username });
     if (user) {
       throw "Username already in use. Please try another one.";
     }
 
-    if (req.body.username.includes(" ")) {
-      throw "Username cannot contain space(s). Please try again";
-    }
+    // ----------- AFTER VALIDATION ---------------
 
+    //Generating password hash
     let hash = await bcrypt.hash(req.body.password, 10);
 
-    console.log(hash);
     let new_user = new User({
       email: req.body.email,
       password: hash,
@@ -123,17 +128,24 @@ const registerUser = async (req, res, next) => {
       },
     });
 
+    //Saving the new user in db
     new_user = await new_user.save();
+
+    //Logging success message to console
     console.log("New user created: ", new_user.email);
+
+    //Returning response
     return res.status(200).json({
       message: "User Created",
     });
   } catch (err) {
+    //If a validation error is thrown
     if (err.details && err.details.length > 0) {
       return res.status(422).json({
         message: err.details[0].message,
       });
     } else {
+      //For all other errors
       return res.status(406).json({
         message: err,
       });
@@ -148,16 +160,57 @@ const fetchProfile = async (req, res, next) => {
     if (!fetchedUser) {
       throw "Unable to fetch user profile data";
     }
+
+    //Calculating learning progress
+
     let learningProgress = 0;
+    let completed = 0;
+    let beginnerComp = 0;
+    let intermediateComp = 0;
+    let advancedComp = 0;
+
     if (fetchedUser.qAnswers) {
       fetchedUser.qAnswers.forEach((ans) => {
-        if (ans.exercise.split("-")[1] === "topic") {
-          learningProgress = learningProgress + 7;
-        } else {
-          learningProgress = learningProgress + 10;
+        if (ans.completedOnce === true) {
+          completed++;
+        }
+        learningProgress = ((completed / 26) * 100).toFixed(0);
+        console.log(learningProgress);
+
+        if (ans.qID.includes("py-01") && ans.completedOnce == true) {
+          beginnerComp++;
+        }
+        if (ans.qID.includes("py-02") && ans.completedOnce == true) {
+          intermediateComp++;
+        }
+        if (ans.qID.includes("py-03") && ans.completedOnce == true) {
+          advancedComp++;
         }
       });
+      if (
+        beginnerComp == 4 &&
+        !fetchedUser.coursesCompleted.includes("Python for Everyday Math")
+      ) {
+        fetchedUser.coursesCompleted.push("Python for Everyday Math");
+      }
+
+      if (
+        intermediateComp == 6 &&
+        !fetchedUser.coursesCompleted.includes("Python Text-Based Quiz Game")
+      ) {
+        fetchedUser.coursesCompleted.push("Python Text-Based Quiz Game");
+      }
+
+      if (
+        advancedComp == 6 &&
+        !fetchedUser.coursesCompleted.includes(
+          "Simulation Modeling with Python"
+        )
+      ) {
+        fetchedUser.coursesCompleted.push("Simulation Modeling with Python");
+      }
     }
+
     let user = {
       email: fetchedUser.email,
       joined: fetchedUser.joinedOn,
@@ -171,6 +224,7 @@ const fetchProfile = async (req, res, next) => {
       recentActivities: fetchedUser.recentActivities,
       learningProgress: learningProgress,
       certificates: fetchedUser.certificates,
+      coursesCompleted: fetchedUser.coursesCompleted,
     };
 
     console.log("Profile data fetched for user: ", fetchedUser.email);
@@ -399,6 +453,29 @@ const getRecentActivities = async (req, res, next) => {
   // }
 };
 
+//User history fetch controller
+const fetchHistory = async (req, res, next) => {
+  try {
+    const fetchedUser = await User.findById(req.params.id);
+    if (!fetchedUser) {
+      throw "Unable to fetch user profile data";
+    }
+
+    console.log("here");
+
+    const userHistory = fetchedUser.qAnswers.map((answer) => ({
+      userAnswer: answer.exercise,
+      completedOn: answer.completedOn,
+    }));
+
+    return res.status(200).json(userHistory);
+  } catch (err) {
+    return res.status(401).json({
+      message: err,
+    });
+  }
+};
+
 module.exports = {
   loginUser,
   registerUser,
@@ -408,4 +485,5 @@ module.exports = {
   getFavorites,
   updateRecentActivities,
   getRecentActivities,
+  fetchHistory,
 };

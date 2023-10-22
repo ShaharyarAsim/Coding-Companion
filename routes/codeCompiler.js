@@ -28,7 +28,7 @@ async function executeWithArgs(code, args) {
 
     // Function catches the output of the execution, with the exception of errors
     newScript.stdout.on("data", function (data) {
-      console.log(data.toString()); // Data is logged
+      //console.log(data.toString()); // Data is logged
       compResult = data.toString(); // Output is appended to the string value
     });
 
@@ -40,7 +40,7 @@ async function executeWithArgs(code, args) {
 
     // Function catches run-time errors -- anything that is encountered during execution
     newScript.on("error", function (err) {
-      console.log("Error", err);
+      console.log("Run-time error: ", err);
       reject(err); // Execution is cancelled
     });
 
@@ -121,16 +121,17 @@ router.post("/compile/:id", async (req, res) => {
         );
       }
 
-      console.log(prompt);
-      console.log(completion);
+      //console.log(prompt);
+      //console.log(completion);
 
       // Boolean checks if the AI has congratulated the user for the correct answer
       if (completion.search("Congratulations") > -1) {
         // If the AI has congratulated the user, it more than likely means the AI deems the answer correct, so this is recorded
         isCorrect = true;
-        console.log("The answer is true");
+        //console.log("The answer is true");
       } else {
-        console.log("The answer is false");
+        isCorrect = false;
+        //console.log("The answer is false");
       }
 
       // The response sent back to the app combines the output of the compiler and the AI's analysis
@@ -172,7 +173,6 @@ router.post("/compile/:id", async (req, res) => {
                     "Cody Course Mastery Certified: " + ex[0] + " " + ex.pop();
                   user.certificates.push(ex);
                 } else {
-                  console("HERE");
                   data.completedOnce = false;
                 }
               }
@@ -230,7 +230,12 @@ router.post("/compile/:id", async (req, res) => {
   } catch (error) {
     // Error handling
     console.log(error.message);
-    res.status(500).json({ error: error.message });
+    res
+      .status(500)
+      .json({
+        message:
+          "An internal server error occured while trying to compile the code",
+      });
   }
 });
 
