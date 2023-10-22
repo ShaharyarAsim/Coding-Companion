@@ -19,7 +19,7 @@ require("./helpers/init_mongo"); //Connecting to MongoDB Atlas
 //Routing and middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cors());
+//app.use(cors());
 app.use(requestIp.mw()); //To request user ip for tracking
 app.use("/", express.static(path.join(__dirname, "frontend")));
 //app.use("/images", express.static(path.join("backend/images"))); //Use when uploading images on server

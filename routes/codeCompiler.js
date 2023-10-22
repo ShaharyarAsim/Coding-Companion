@@ -53,7 +53,7 @@ async function executeWithArgs(code, args) {
 }
 
 // POST endpoint for '/compile'
-router.post("/compile/:id", async (req, res) => {
+router.post("/compile/:id", checkAuth, async (req, res) => {
   // Vars passed by req.body
   const { exercise, codeStorage, fullCode, question, questionID, args, useAI } =
     req.body;
@@ -230,12 +230,10 @@ router.post("/compile/:id", async (req, res) => {
   } catch (error) {
     // Error handling
     console.log(error.message);
-    res
-      .status(500)
-      .json({
-        message:
-          "An internal server error occured while trying to compile the code",
-      });
+    res.status(500).json({
+      message:
+        "An internal server error occured while trying to compile the code",
+    });
   }
 });
 
