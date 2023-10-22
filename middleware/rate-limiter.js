@@ -1,3 +1,8 @@
+// This middleware is used to limit the number of api calls
+// per user per unit time
+// To avoid unnecessary backend strain
+// And to avoid DOS Attack
+
 const rateLimit = require("express-rate-limit");
 
 const userAPIRateLimiter = rateLimit({
